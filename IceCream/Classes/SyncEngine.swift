@@ -25,8 +25,11 @@ public final class SyncEngine {
         case .public:
             let publicDatabaseManager = PublicDatabaseManager(objects: objects, container: container)
             self.init(databaseManager: publicDatabaseManager)
-        default:
-            fatalError("Not supported yet")
+        case .shared:
+            let sharedDatabaseManager = SharedDatabaseManager(objects: objects, container: container)
+            self.init(databaseManager: sharedDatabaseManager)
+        @unknown default:
+            fatalError("This option is not supported yet")
         }
     }
     
@@ -90,10 +93,12 @@ public enum Notifications: String, NotificationName {
 public enum IceCreamKey: String {
     /// Tokens
     case databaseChangesTokenKey
+    case sharedDatabaseChangesTokenKey
     case zoneChangesTokenKey
     
     /// Flags
     case subscriptionIsLocallyCachedKey
+    case sharedSubscriptionIsLocallyCachedKey
     case hasCustomZoneCreatedKey
     
     var value: String {

@@ -25,9 +25,11 @@ public final class SyncObject<T> where T: Object & CKRecordConvertible & CKRecor
     
     public var realm: Realm
     public var databaseScope: CKDatabase.Scope = .private
+    public var zoneID: CKRecordZone.ID
     
-    public init(realm: Realm = try! Realm()) {
-      self.realm = realm
+    public init(realm: Realm, zoneID: CKRecordZone.ID) {
+        self.realm = realm
+        self.zoneID = zoneID
   }
 }
 
@@ -37,10 +39,6 @@ extension SyncObject: Syncable {
     
     public var recordType: String {
         return T.recordType
-    }
-    
-    public var zoneID: CKRecordZone.ID {
-        return T.zoneID
     }
     
     public var zoneChangesToken: CKServerChangeToken? {
@@ -115,8 +113,8 @@ extension SyncObject: Syncable {
             case .initial(_):
                 break
             case .update(let collection, _, let insertions, let modifications):
-                let recordsToStore = (insertions + modifications).filter { $0 < collection.count }.map { collection[$0] }.filter{ !$0.isDeleted }.map { $0.record }
-                let recordIDsToDelete = modifications.filter { $0 < collection.count }.map { collection[$0] }.filter { $0.isDeleted }.map { $0.recordID }
+                let recordsToStore = (insertions + modifications).filter { $0 < collection.count }.map { collection[$0] }.filter{ !$0.isDeleted }.map { $0.record(for: self.zoneID) }
+                let recordIDsToDelete = modifications.filter { $0 < collection.count }.map { collection[$0] }.filter { $0.isDeleted }.map { $0.recordID(for: self.zoneID) }
                 
                 guard recordsToStore.count > 0 || recordIDsToDelete.count > 0 else { return }
                 self.pipeToEngine?(recordsToStore, recordIDsToDelete)
@@ -142,7 +140,7 @@ extension SyncObject: Syncable {
     }
     
     public func pushLocalObjectsToCloudKit() {
-        let recordsToStore: [CKRecord] = realm.objects(T.self).filter { !$0.isDeleted }.map { $0.record }
+        let recordsToStore: [CKRecord] = realm.objects(T.self).filter { !$0.isDeleted }.map { $0.record(for: self.zoneID) }
         pipeToEngine?(recordsToStore, [])
     }
     

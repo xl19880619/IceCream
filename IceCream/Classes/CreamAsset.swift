@@ -85,8 +85,8 @@ public class CreamAsset: Object {
     ///   - data: The file data
     ///   - shouldOverwrite: Whether to try and save the file even if an existing file exists for the same object.
     /// - Returns: A CreamAsset if it was successful
-    public static func create(object: CKRecordConvertible, propName: String, data: Data, shouldOverwrite: Bool = true) -> CreamAsset? {
-        return CreamAsset(objectID: object.recordID.recordName,
+    public static func create(object: CKRecordConvertible, propName: String, data: Data, zoneID: CKRecordZone.ID, shouldOverwrite: Bool = true) -> CreamAsset? {
+        return CreamAsset(objectID: object.recordID(for: zoneID).recordName,
                           propName: propName,
                           data: data,
                           shouldOverwrite: shouldOverwrite)
@@ -114,9 +114,9 @@ public class CreamAsset: Object {
     ///   - propName: The unique property name to identify this asset. e.g.: Dog Object may have multiple CreamAsset properties, so we need unique `propName`s to identify these.
     ///   - url: The URL of the file to store. Any path extension on the file (e.g. "mov") will be maintained
     /// - Returns: A CreamAsset if it was successful
-    public static func create(object: CKRecordConvertible, propName: String, url: URL) -> CreamAsset? {
+    public static func create(object: CKRecordConvertible, propName: String, url: URL, zoneID: CKRecordZone.ID) -> CreamAsset? {
 
-        return CreamAsset(objectID: object.recordID.recordName,
+        return CreamAsset(objectID: object.recordID(for: zoneID).recordName,
                           propName: propName,
                           url: url)
     }
