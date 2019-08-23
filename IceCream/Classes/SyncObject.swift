@@ -70,6 +70,16 @@ extension SyncObject: Syncable {
     
     public func add(record: CKRecord) {
         DispatchQueue.main.async {
+            self.realm.beginWrite()
+            defer {
+                if let token = self.notificationToken {
+                    try! self.realm.commitWrite(withoutNotifying: [token])
+                } else {
+                    try! self.realm.commitWrite()
+                }
+
+            }
+
             guard let object = T.parseFromRecord(record: record, realm: self.realm) else {
                 print("There is something wrong with the converson from cloud record to local object")
                 return
@@ -77,30 +87,28 @@ extension SyncObject: Syncable {
             
             /// If your model class includes a primary key, you can have Realm intelligently update or add objects based off of their primary key values using Realm().add(_:update:).
             /// https://realm.io/docs/swift/latest/#objects-with-primary-keys
-            self.realm.beginWrite()
             self.realm.add(object, update: .modified)
-            if let token = self.notificationToken {
-                try! self.realm.commitWrite(withoutNotifying: [token])
-            } else {
-                try! self.realm.commitWrite()
-            }
         }
     }
     
     public func delete(recordID: CKRecord.ID) {
         DispatchQueue.main.async {
+            self.realm.beginWrite()
+            defer {
+                if let token = self.notificationToken {
+                    try! self.realm.commitWrite(withoutNotifying: [token])
+                } else {
+                    try! self.realm.commitWrite()
+                }
+
+            }
+
             guard let object = self.realm.object(ofType: T.self, forPrimaryKey: T.primaryKeyForRecordID(recordID: recordID)) else {
                 // Not found in local realm database
                 return
             }
             CreamAsset.deleteCreamAssetFile(with: recordID.recordName)
-            self.realm.beginWrite()
             self.realm.delete(object)
-            if let token = self.notificationToken {
-                try! self.realm.commitWrite(withoutNotifying: [token])
-            } else {
-                try! self.realm.commitWrite()
-            }
         }
     }
     
