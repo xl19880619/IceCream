@@ -11,13 +11,14 @@ import RealmSwift
 
 public protocol CKRecordConvertible {
     static var recordType: String { get }
-//    static func zoneID(for databaseScope: CKDatabase.Scope, ownerName: String) -> CKRecordZone.ID
 
     func recordID(for zoneID: CKRecordZone.ID) -> CKRecord.ID
 
     func record(for zoneID: CKRecordZone.ID) ->  CKRecord
 
     var isDeleted: Bool { get }
+
+    var systemFields: Data? { get }
 }
 
 extension CKRecordConvertible where Self: Object {
@@ -58,10 +59,27 @@ extension CKRecordConvertible where Self: Object {
     
     // Simultaneously init CKRecord with zoneID and recordID, thanks to this guy: https://stackoverflow.com/questions/45429133/how-to-initialize-ckrecord-with-both-zoneid-and-recordid
     public func record(for zoneID: CKRecordZone.ID) ->  CKRecord {
-        let r = CKRecord(recordType: Self.recordType, recordID: recordID(for: zoneID))
+        let r: CKRecord
+        if let systemFields = systemFields {
+            let unarchiver = NSKeyedUnarchiver(forReadingWith: systemFields)
+            unarchiver.requiresSecureCoding = true
+            let record = CKRecord(coder: unarchiver)
+            if record == nil {
+                print("Error: record nil when creating it from system fields")
+            }
+
+            r = record ?? CKRecord(recordType: Self.recordType, recordID: recordID(for: zoneID))
+        } else {
+            r = CKRecord(recordType: Self.recordType, recordID: recordID(for: zoneID))
+        }
+
         let properties = objectSchema.properties
         for prop in properties {
-            
+
+            if prop.name == "systemFields" {
+                continue
+            }
+
             let item = self[prop.name]
             
             if prop.isArray {
@@ -123,6 +141,7 @@ extension CKRecordConvertible where Self: Object {
                 break
             }
         }
+
         return r
     }
 }

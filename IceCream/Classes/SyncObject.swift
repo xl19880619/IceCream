@@ -30,7 +30,7 @@ public final class SyncObject<T> where T: Object & CKRecordConvertible & CKRecor
     public init(realm: Realm, zoneID: CKRecordZone.ID) {
         self.realm = realm
         self.zoneID = zoneID
-  }
+    }
 }
 
 // MARK: - Zone information

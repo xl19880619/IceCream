@@ -8,14 +8,18 @@
 import CloudKit
 import RealmSwift
 
-public protocol CKRecordRecoverable {
-    
+public protocol CKRecordRecoverable: class {
+    var systemFields: Data? { get set }
 }
 
 extension CKRecordRecoverable where Self: Object {
-    static func parseFromRecord(record: CKRecord, realm: Realm) -> Self? {
+    public static func parseFromRecord(record: CKRecord, realm: Realm) -> Self? {
         let o = Self()
         for prop in o.objectSchema.properties {
+            if prop.name == "systemFields" {
+                continue
+            }
+
             var recordValue: Any?
             
             if prop.isArray {
@@ -86,6 +90,15 @@ extension CKRecordRecoverable where Self: Object {
                 o.setValue(recordValue, forKey: prop.name)
             }
         }
+
+        let archivedData = NSMutableData()
+        let archiver = NSKeyedArchiver(forWritingWith: archivedData)
+        archiver.requiresSecureCoding = true
+        record.encodeSystemFields(with: archiver)
+        archiver.finishEncoding()
+
+        o.systemFields = archivedData as Data
+
         return o
     }
     
