@@ -20,7 +20,7 @@ public protocol CKRecordConvertible {
 
     var systemFields: Data? { get }
 
-    var parent: CKRecordConvertible?
+    var parent: CKRecordConvertible? { get }
 }
 
 extension CKRecordConvertible where Self: Object {
