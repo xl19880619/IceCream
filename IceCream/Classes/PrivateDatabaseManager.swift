@@ -67,8 +67,17 @@ final class PrivateDatabaseManager: DatabaseManager {
     func createCustomZonesIfAllowed() {
         let zonesToCreate = syncObjects.filter { !$0.isCustomZoneCreated }.map { CKRecordZone(zoneID: $0.zoneID) }
         guard zonesToCreate.count > 0 else { return }
+
+        let dedupedZones = zonesToCreate.reduce([]) { (current, next) -> [CKRecordZone] in
+            let duplicate = current.contains { $0.zoneID == next.zoneID }
+            if duplicate {
+                return current
+            } else {
+                return current + [next]
+            }
+        }
         
-        let modifyOp = CKModifyRecordZonesOperation(recordZonesToSave: zonesToCreate, recordZoneIDsToDelete: nil)
+        let modifyOp = CKModifyRecordZonesOperation(recordZonesToSave: dedupedZones, recordZoneIDsToDelete: nil)
         modifyOp.modifyRecordZonesCompletionBlock = { [weak self](_, _, error) in
             guard let self = self else { return }
             switch ErrorHandler.shared.resultType(with: error) {
