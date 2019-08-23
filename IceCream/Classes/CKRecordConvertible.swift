@@ -19,6 +19,8 @@ public protocol CKRecordConvertible {
     var isDeleted: Bool { get }
 
     var systemFields: Data? { get }
+
+    var parent: CKRecordConvertible?
 }
 
 extension CKRecordConvertible where Self: Object {
@@ -140,6 +142,10 @@ extension CKRecordConvertible where Self: Object {
             default:
                 break
             }
+        }
+
+        if let parent = parent {
+            r.parent = CKRecord.Reference(recordID: parent.recordID(for: zoneID), action: .none)
         }
 
         return r
