@@ -76,6 +76,11 @@ struct ErrorHandler {
             // Normally it shouldn't happen since if CKOperation `isAtomic` set to true
             if let dictionary = e.userInfo[CKPartialErrorsByItemIDKey] as? NSDictionary {
                 print("ErrorHandler.partialFailure for \(dictionary.count) items; CKPartialErrorsByItemIDKey: \(dictionary)")
+
+                if partialFailureShouldRetry(withErrors: dictionary) {
+                    print("Retrying the operation as it contains reference errors")
+                    return .retry(afterSeconds: 5, message: message)
+                }
             }
             return .recoverableError(reason: .partialFailure, message: message)
             
@@ -87,7 +92,6 @@ struct ErrorHandler {
         // SHARE DATABASE RELATED
         case .alreadyShared,
              .participantMayNeedVerification,
-             .referenceViolation,
              .tooManyParticipants:
             print("ErrorHandler.Fail: \(message)")
             return .fail(reason: .shareRelated, message: message)
@@ -96,14 +100,16 @@ struct ErrorHandler {
         case .quotaExceeded:
             print("ErrorHandler.Fail: \(message)")
             return .fail(reason: .quotaExceeded, message: message)
+
+        case .referenceViolation:
+            print("ErrorHandler.Fail: \(message). Will retry in 5 seconds because likely the parent is currently being uploaded")
+            return .retry(afterSeconds: 5, message: message)
             
         // FAIL IS THE FINAL, WE REALLY CAN'T DO MORE
         default:
             print("ErrorHandler.Fail: \(message)")
             return .fail(reason: .unknown, message: message)
-
         }
-        
     }
     
     func retryOperationIfPossible(retryAfter: Double, block: @escaping () -> ()) {
@@ -113,6 +119,18 @@ struct ErrorHandler {
             block()
         })
         
+    }
+
+    private func partialFailureShouldRetry(withErrors errors: NSDictionary) -> Bool {
+        for error in errors.allValues {
+            // If one of the errors is a reference violation, it probably means that the parent is not yet uploaded
+            // So, let's retry it
+            if let error = error as? CKError, error.code == .referenceViolation {
+                return true
+            }
+        }
+
+        return false
     }
     
     private func returnErrorMessage(for code: CKError.Code) -> String {

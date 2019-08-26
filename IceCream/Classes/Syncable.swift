@@ -21,9 +21,6 @@ public protocol Syncable: class {
     var zoneChangesToken: CKServerChangeToken? { get set }
     var isCustomZoneCreated: Bool { get set }
     
-    /// Custom Realm reference
-    var realm: Realm { get }
-    
     /// Realm Database related
     func registerLocalDatabase()
     func cleanUp()
