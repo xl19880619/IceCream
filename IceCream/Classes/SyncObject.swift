@@ -16,20 +16,18 @@ import CloudKit
 /// 3. it hands over to SyncEngine so that it can talk to CloudKit.
 
 public final class SyncObject<T> where T: Object & CKRecordConvertible & CKRecordRecoverable {
-    
+
     /// Notifications are delivered as long as a reference is held to the returned notification token. We should keep a strong reference to this token on the class registering for updates, as notifications are automatically unregistered when the notification token is deallocated.
     /// For more, reference is here: https://realm.io/docs/swift/latest/#notifications
     private var notificationToken: NotificationToken?
 
-    private let queue = DispatchQueue(label: "SyncObject-\(T.self)", qos: .utility)
-    
     public var pipeToEngine: ((_ recordsToStore: [CKRecord], _ recordIDsToDelete: [CKRecord.ID]) -> ())?
-    
+
     public let realm: () -> Realm
     public var databaseScope: CKDatabase.Scope = .private
     public var zoneID: CKRecordZone.ID
     public var errorHandler: ((Error)->Void)?
-    
+
     public init(realm: @escaping () -> Realm, zoneID: CKRecordZone.ID, errorHandler: ((Error)->Void)? = nil) {
         self.realm = realm
         self.zoneID = zoneID
@@ -40,11 +38,11 @@ public final class SyncObject<T> where T: Object & CKRecordConvertible & CKRecor
 // MARK: - Zone information
 
 extension SyncObject: Syncable {
-    
+
     public var recordType: String {
         return T.recordType
     }
-    
+
     public var zoneChangesToken: CKServerChangeToken? {
         get {
             /// For the very first time when launching, the token will be nil and the server will be giving everything on the Cloud to client
@@ -71,9 +69,9 @@ extension SyncObject: Syncable {
             UserDefaults.standard.set(newValue, forKey: T.className() + IceCreamKey.hasCustomZoneCreatedKey.value)
         }
     }
-    
+
     public func add(record: CKRecord) {
-        queue.async {
+        DispatchQueue.main.async {
             let realm = self.realm()
 
             realm.beginWrite()
@@ -93,15 +91,15 @@ extension SyncObject: Syncable {
                 print("There is something wrong with the converson from cloud record to local object")
                 return
             }
-            
+
             /// If your model class includes a primary key, you can have Realm intelligently update or add objects based off of their primary key values using Realm().add(_:update:).
             /// https://realm.io/docs/swift/latest/#objects-with-primary-keys
             realm.add(object, update: .modified)
         }
     }
-    
+
     public func delete(recordID: CKRecord.ID) {
-        queue.async {
+        DispatchQueue.main.async {
             let realm = self.realm()
 
             realm.beginWrite()
@@ -126,7 +124,7 @@ extension SyncObject: Syncable {
             realm.delete(object)
         }
     }
-    
+
     /// When you commit a write transaction to a Realm, all other instances of that Realm will be notified, and be updated automatically.
     /// For more: https://realm.io/docs/swift/latest/#writes
     public func registerLocalDatabase() {
@@ -140,7 +138,7 @@ extension SyncObject: Syncable {
             case .update(let collection, _, let insertions, let modifications):
                 let recordsToStore = (insertions + modifications).filter { $0 < collection.count }.map { collection[$0] }.filter{ !$0.isDeleted }.map { $0.record(for: self.zoneID) }
                 let recordIDsToDelete = modifications.filter { $0 < collection.count }.map { collection[$0] }.filter { $0.isDeleted }.map { $0.recordID(for: self.zoneID) }
-                
+
                 guard recordsToStore.count > 0 || recordIDsToDelete.count > 0 else { return }
                 self.pipeToEngine?(recordsToStore, recordIDsToDelete)
             case .error(let error):
@@ -148,15 +146,15 @@ extension SyncObject: Syncable {
             }
         })
     }
-    
+
     public func cleanUp() {
         let realm = self.realm()
 
         let objects = realm.objects(T.self).filter { $0.isDeleted }
-        
+
         var tokens: [NotificationToken] = []
         notificationToken.flatMap { tokens = [$0] }
-        
+
         realm.beginWrite()
         objects.forEach({ realm.delete($0) })
         do {
@@ -165,13 +163,13 @@ extension SyncObject: Syncable {
             errorHandler?(error)
         }
     }
-    
+
     public func pushLocalObjectsToCloudKit() {
         let realm = self.realm()
 
         let recordsToStore: [CKRecord] = realm.objects(T.self).filter { !$0.isDeleted }.map { $0.record(for: self.zoneID) }
         pipeToEngine?(recordsToStore, [])
     }
-    
+
 }
 
