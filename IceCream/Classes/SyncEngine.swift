@@ -40,11 +40,12 @@ public final class SyncEngine {
     
     public func setup() {
         databaseManager.prepare()
+        databaseManager.registerLocalDatabase()
+
         databaseManager.container.accountStatus { [weak self] (status, error) in
             guard let self = self else { return }
             switch status {
             case .available:
-                self.databaseManager.registerLocalDatabase()
                 self.databaseManager.createCustomZonesIfAllowed()
                 self.databaseManager.fetchChangesInDatabase(nil)
                 self.databaseManager.resumeLongLivedOperationIfPossible()
@@ -80,8 +81,8 @@ extension SyncEngine {
     
     /// Push all existing local data to CloudKit
     /// You should NOT to call this method too frequently
-    public func pushAll() {
-        databaseManager.syncObjects.forEach { $0.pushLocalObjectsToCloudKit() }
+    public func pushAll(allowsCellularAccess: Bool = true) {
+        databaseManager.syncObjects.forEach { $0.pushLocalObjectsToCloudKit(allowsCellularAccess: allowsCellularAccess) }
     }
     
 }

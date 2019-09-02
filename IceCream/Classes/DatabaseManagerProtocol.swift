@@ -49,6 +49,11 @@ extension DatabaseManager {
                 guard let self = self else { return }
                 self.syncRecordsToCloudKit(recordsToStore: recordsToStore, recordIDsToDelete: recordIDsToDelete)
             }
+
+            $0.pipeToEngine = { [weak self] recordsToStore, recordIDsToDelete in
+                guard let self = self else { return }
+                self.syncRecordsToCloudKit(recordsToStore: recordsToStore, recordIDsToDelete: recordIDsToDelete, allowsCellularAccess: false)
+            }
         }
     }
     
@@ -80,12 +85,13 @@ extension DatabaseManager {
     
     /// Sync local data to CloudKit
     /// For more about the savePolicy: https://developer.apple.com/documentation/cloudkit/ckrecordsavepolicy
-    public func syncRecordsToCloudKit(recordsToStore: [CKRecord], recordIDsToDelete: [CKRecord.ID], completion: ((Error?) -> ())? = nil) {
+    public func syncRecordsToCloudKit(recordsToStore: [CKRecord], recordIDsToDelete: [CKRecord.ID], allowsCellularAccess: Bool = true, completion: ((Error?) -> ())? = nil) {
         let modifyOpe = CKModifyRecordsOperation(recordsToSave: recordsToStore, recordIDsToDelete: recordIDsToDelete)
         
         if #available(iOS 11.0, OSX 10.13, tvOS 11.0, watchOS 4.0, *) {
             let config = CKOperation.Configuration()
             config.isLongLived = true
+            config.allowsCellularAccess = allowsCellularAccess
             modifyOpe.configuration = config
         } else {
             // Fallback on earlier versions

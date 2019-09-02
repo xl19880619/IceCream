@@ -28,9 +28,10 @@ public protocol Syncable: class {
     func delete(recordID: CKRecord.ID)
     
     /// CloudKit related
-    func pushLocalObjectsToCloudKit()
+    func pushLocalObjectsToCloudKit(allowsCellularAccess: Bool)
     
     /// Callback
     var pipeToEngine: ((_ recordsToStore: [CKRecord], _ recordIDsToDelete: [CKRecord.ID]) -> ())? { get set }
+    var pipeToEngineOnWifi: ((_ recordsToStore: [CKRecord], _ recordIDsToDelete: [CKRecord.ID]) -> ())? { get set }
     
 }

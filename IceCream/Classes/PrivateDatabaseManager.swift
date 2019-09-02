@@ -88,7 +88,7 @@ final class PrivateDatabaseManager: DatabaseManager {
                     // As we register local database in the first step, we have to force push local objects which
                     // have not been caught to CloudKit to make data in sync
                     DispatchQueue.main.async {
-                        object.pushLocalObjectsToCloudKit()
+                        object.pushLocalObjectsToCloudKit(allowsCellularAccess: true)
                     }
                 }
             case .retry(let timeToWait, _):

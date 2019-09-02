@@ -22,6 +22,7 @@ public final class SyncObject<T> where T: Object & CKRecordConvertible & CKRecor
     private var notificationToken: NotificationToken?
 
     public var pipeToEngine: ((_ recordsToStore: [CKRecord], _ recordIDsToDelete: [CKRecord.ID]) -> ())?
+    public var pipeToEngineOnWifi: ((_ recordsToStore: [CKRecord], _ recordIDsToDelete: [CKRecord.ID]) -> ())?
 
     public let realm: () -> Realm
     public var databaseScope: CKDatabase.Scope = .private
@@ -164,11 +165,15 @@ extension SyncObject: Syncable {
         }
     }
 
-    public func pushLocalObjectsToCloudKit() {
+    public func pushLocalObjectsToCloudKit(allowsCellularAccess: Bool) {
         let realm = self.realm()
 
         let recordsToStore: [CKRecord] = realm.objects(T.self).filter { !$0.isDeleted }.map { $0.record(for: self.zoneID) }
-        pipeToEngine?(recordsToStore, [])
+        if allowsCellularAccess {
+            pipeToEngine?(recordsToStore, [])
+        } else {
+            pipeToEngineOnWifi?(recordsToStore, [])
+        }
     }
 
 }
