@@ -115,8 +115,7 @@ final class SharedDatabaseManager: DatabaseManager {
 
         changesOp.recordZoneChangeTokensUpdatedBlock = { [weak self] zoneId, token, _ in
             guard let self = self else { return }
-            guard let syncObject = self.syncObjects.first(where: { $0.zoneID == zoneId }) else { return }
-            syncObject.zoneChangesToken = token
+            self.syncObjects.filter { $0.zoneID == zoneId }.forEach { $0.zoneChangesToken = token }
         }
 
         changesOp.recordChangedBlock = { [weak self] record in
@@ -137,8 +136,7 @@ final class SharedDatabaseManager: DatabaseManager {
             guard let self = self else { return }
             switch ErrorHandler.shared.resultType(with: error) {
             case .success:
-                guard let syncObject = self.syncObjects.first(where: { $0.zoneID == zoneId }) else { return }
-                syncObject.zoneChangesToken = token
+                self.syncObjects.filter { $0.zoneID == zoneId }.forEach { $0.zoneChangesToken = token }
             case .retry(let timeToWait, _):
                 ErrorHandler.shared.retryOperationIfPossible(retryAfter: timeToWait, block: {
                     self.fetchChangesInZones(callback)
@@ -147,8 +145,7 @@ final class SharedDatabaseManager: DatabaseManager {
                 switch reason {
                 case .changeTokenExpired:
                     /// The previousServerChangeToken value is too old and the client must re-sync from scratch
-                    guard let syncObject = self.syncObjects.first(where: { $0.zoneID == zoneId }) else { return }
-                    syncObject.zoneChangesToken = nil
+                    self.syncObjects.filter { $0.zoneID == zoneId }.forEach { $0.zoneChangesToken = nil }
                     self.fetchChangesInZones(callback)
                 default:
                     return
