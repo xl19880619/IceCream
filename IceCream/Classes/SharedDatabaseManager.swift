@@ -123,7 +123,7 @@ final class SharedDatabaseManager: DatabaseManager {
             /// The Cloud will return the modified record since the last zoneChangesToken, we need to do local cache here.
             /// Handle the record:
             guard let self = self else { return }
-            guard let syncObject = self.syncObjects.first(where: { $0.recordType == record.recordType }) else { return }
+            guard let syncObject = self.syncObjects.first(where: { $0.recordTypes.contains(record.recordType) }) else { return }
             syncObject.add(record: record)
         }
 

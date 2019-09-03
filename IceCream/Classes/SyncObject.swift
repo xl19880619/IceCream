@@ -40,8 +40,8 @@ public final class SyncObject<T> where T: Object & CKRecordConvertible & CKRecor
 
 extension SyncObject: Syncable {
 
-    public var recordType: String {
-        return T.recordType
+    public var recordTypes: [String] {
+        return [T.recordType]
     }
 
     public var zoneChangesToken: CKServerChangeToken? {

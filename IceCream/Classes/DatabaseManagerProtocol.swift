@@ -96,6 +96,7 @@ extension DatabaseManager {
         } else {
             // Fallback on earlier versions
             modifyOpe.isLongLived = true
+            modifyOpe.allowsCellularAccess = allowsCellularAccess
         }
         
         // We use .changedKeys savePolicy to do unlocked changes here cause my app is contentious and off-line first

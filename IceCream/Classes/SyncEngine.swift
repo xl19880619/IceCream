@@ -84,7 +84,13 @@ extension SyncEngine {
     public func pushAll(allowsCellularAccess: Bool = true) {
         databaseManager.syncObjects.forEach { $0.pushLocalObjectsToCloudKit(allowsCellularAccess: allowsCellularAccess) }
     }
-    
+
+    public func syncRecordsToCloudKit(recordsToStore: [CKRecord], recordIDsToDelete: [CKRecord.ID], allowsCellularAccess: Bool = true, completion: ((Error?) -> ())? = nil) {
+        databaseManager.syncRecordsToCloudKit(recordsToStore: recordsToStore,
+                                              recordIDsToDelete: recordIDsToDelete,
+                                              allowsCellularAccess: allowsCellularAccess,
+                                              completion: completion)
+    }
 }
 
 public enum Notifications: String, NotificationName {

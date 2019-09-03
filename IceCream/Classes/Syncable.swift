@@ -14,7 +14,7 @@ import RealmSwift
 public protocol Syncable: class {
     
     /// CKRecordZone related
-    var recordType: String { get }
+    var recordTypes: [String] { get }
     var zoneID: CKRecordZone.ID { get }
     
     /// Local storage

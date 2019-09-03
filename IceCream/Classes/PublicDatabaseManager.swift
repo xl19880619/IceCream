@@ -29,9 +29,11 @@ final class PublicDatabaseManager: DatabaseManager {
     func fetchChangesInDatabase(_ callback: ((Error?) -> Void)?) {
         syncObjects.forEach { [weak self] syncObject in
             let predicate = NSPredicate(value: true)
-            let query = CKQuery(recordType: syncObject.recordType, predicate: predicate)
-            let queryOperation = CKQueryOperation(query: query)
-            self?.excuteQueryOperation(queryOperation: queryOperation, on: syncObject, callback: callback)
+            syncObject.recordTypes.forEach { recordType in
+                let query = CKQuery(recordType: recordType, predicate: predicate)
+                let queryOperation = CKQueryOperation(query: query)
+                self?.excuteQueryOperation(queryOperation: queryOperation, on: syncObject, callback: callback)
+            }
         }
     }
     
@@ -95,20 +97,22 @@ final class PublicDatabaseManager: DatabaseManager {
     
     private func createSubscriptionInPublicDatabase(on syncObject: Syncable) {
         #if os(iOS) || os(tvOS) || os(macOS)
-        let predict = NSPredicate(value: true)
-        let subscription = CKQuerySubscription(recordType: syncObject.recordType, predicate: predict, subscriptionID: IceCreamSubscription.cloudKitPublicDatabaseSubscriptionID.id, options: [CKQuerySubscription.Options.firesOnRecordCreation, CKQuerySubscription.Options.firesOnRecordUpdate, CKQuerySubscription.Options.firesOnRecordDeletion])
-        
-        let notificationInfo = CKSubscription.NotificationInfo()
-        notificationInfo.shouldSendContentAvailable = true // Silent Push
-        
-        subscription.notificationInfo = notificationInfo
-        
-        let createOp = CKModifySubscriptionsOperation(subscriptionsToSave: [subscription], subscriptionIDsToDelete: [])
-        createOp.modifySubscriptionsCompletionBlock = { _, _, _ in
-            
+        for recordType in syncObject.recordTypes {
+            let predict = NSPredicate(value: true)
+            let subscription = CKQuerySubscription(recordType: syncObject.recordType, predicate: predict, subscriptionID: IceCreamSubscription.cloudKitPublicDatabaseSubscriptionID.id, options: [CKQuerySubscription.Options.firesOnRecordCreation, CKQuerySubscription.Options.firesOnRecordUpdate, CKQuerySubscription.Options.firesOnRecordDeletion])
+
+            let notificationInfo = CKSubscription.NotificationInfo()
+            notificationInfo.shouldSendContentAvailable = true // Silent Push
+
+            subscription.notificationInfo = notificationInfo
+
+            let createOp = CKModifySubscriptionsOperation(subscriptionsToSave: [subscription], subscriptionIDsToDelete: [])
+            createOp.modifySubscriptionsCompletionBlock = { _, _, _ in
+
+            }
+            createOp.qualityOfService = .utility
+            database.add(createOp)
         }
-        createOp.qualityOfService = .utility
-        database.add(createOp)
         #endif
     }
     
