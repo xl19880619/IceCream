@@ -22,6 +22,7 @@ public protocol Syncable: class {
     var isCustomZoneCreated: Bool { get set }
     
     /// Realm Database related
+    var runLoopQueue: RunloopQueue? { get set }
     func registerLocalDatabase()
     func cleanUp()
     func add(record: CKRecord)

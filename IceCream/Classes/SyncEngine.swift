@@ -14,6 +14,8 @@ import CloudKit
 /// 3. it hands over CKRecordZone stuffs to SyncObject so that it can have an effect on local Realm Database
 
 public final class SyncEngine {
+
+    public let runLoopQueue = RunloopQueue(named: "SyncEngine")
     
     private let databaseManager: DatabaseManager
     
@@ -31,6 +33,8 @@ public final class SyncEngine {
         @unknown default:
             fatalError("This option is not supported yet")
         }
+
+        objects.forEach { $0.runLoopQueue = runLoopQueue }
     }
     
     private init(databaseManager: DatabaseManager) {
