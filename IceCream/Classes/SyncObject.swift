@@ -185,7 +185,7 @@ extension SyncObject: Syncable {
     private func async(_ block: @escaping () -> Void) {
         if let runLoopQueue = runLoopQueue {
             runLoopQueue.async {
-
+                block()
             }
         } else {
             fatalError("Tried to run an operation on a SyncObject before it's been added to a SyncEngine")
