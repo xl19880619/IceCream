@@ -80,7 +80,14 @@ extension SyncEngine {
     ///
     /// - Parameter completionHandler: Supported in the `privateCloudDatabase` when the fetch data process completes, completionHandler will be called. The error will be returned when anything wrong happens. Otherwise the error will be `nil`.
     public func pull(completionHandler: ((Error?) -> Void)? = nil) {
-        databaseManager.fetchChangesInDatabase(completionHandler)
+        databaseManager.fetchChangesInDatabase { (error) in
+            // Wait for all the run loop tasks to complete before returning
+            self.runLoopQueue.async {
+                DispatchQueue.main.async {
+                    completionHandler?(error)
+                }
+            }
+        }
     }
     
     /// Push all existing local data to CloudKit
