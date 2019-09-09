@@ -82,6 +82,9 @@ extension CKRecordRecoverable where Self: Object {
                 } else if let owner = record.value(forKey: prop.name) as? CKRecord.Reference, let ownerType = prop.objectClassName {
                     recordValue = realm.dynamicObject(ofType: ownerType, forPrimaryKey: primaryKeyForRecordID(recordID: owner.recordID))
                     // Because we use the primaryKey as recordName when object converting to CKRecord
+                    if recordValue == nil {
+                        print("Dangling reference. Cannot find record for id: \(owner.recordID)")
+                    }
                 }
             default:
                 print("Other types will be supported in the future.")
