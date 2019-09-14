@@ -19,17 +19,17 @@ public final class SyncEngine {
     
     private let databaseManager: DatabaseManager
     
-    public convenience init(objects: [Syncable], databaseScope: CKDatabase.Scope = .private, container: CKContainer = .default()) {
+    public convenience init(objects: [Syncable], databaseScope: CKDatabase.Scope = .private, container: CKContainer = .default(), pullComplete: @escaping (Error?) -> Void = { _ in }) {
         switch databaseScope {
         case .private:
             let privateDatabaseManager = PrivateDatabaseManager(objects: objects, container: container)
-            self.init(databaseManager: privateDatabaseManager)
+            self.init(databaseManager: privateDatabaseManager, pullComplete: pullComplete)
         case .public:
             let publicDatabaseManager = PublicDatabaseManager(objects: objects, container: container)
-            self.init(databaseManager: publicDatabaseManager)
+            self.init(databaseManager: publicDatabaseManager, pullComplete: pullComplete)
         case .shared:
             let sharedDatabaseManager = SharedDatabaseManager(objects: objects, container: container)
-            self.init(databaseManager: sharedDatabaseManager)
+            self.init(databaseManager: sharedDatabaseManager, pullComplete: pullComplete)
         @unknown default:
             fatalError("This option is not supported yet")
         }
@@ -37,12 +37,12 @@ public final class SyncEngine {
         objects.forEach { $0.runLoopQueue = runLoopQueue }
     }
     
-    private init(databaseManager: DatabaseManager) {
+    private init(databaseManager: DatabaseManager, pullComplete: @escaping (Error?) -> Void) {
         self.databaseManager = databaseManager
-        setup()
+        setup(pullComplete: pullComplete)
     }
     
-    public func setup() {
+    public func setup(pullComplete: @escaping (Error?) -> Void = { _ in }) {
         databaseManager.prepare()
         databaseManager.registerLocalDatabase()
 
@@ -51,22 +51,23 @@ public final class SyncEngine {
             switch status {
             case .available:
                 self.databaseManager.createCustomZonesIfAllowed()
-                self.databaseManager.fetchChangesInDatabase(nil)
+                self.databaseManager.fetchChangesInDatabase(pullComplete)
                 self.databaseManager.resumeLongLivedOperationIfPossible()
                 self.databaseManager.startObservingRemoteChanges()
                 self.databaseManager.startObservingTermination()
                 self.databaseManager.createDatabaseSubscriptionIfHaveNot()
             case .noAccount, .restricted:
                 guard self.databaseManager is PublicDatabaseManager else { break }
-                self.databaseManager.fetchChangesInDatabase(nil)
+                self.databaseManager.fetchChangesInDatabase(pullComplete)
                 self.databaseManager.resumeLongLivedOperationIfPossible()
                 self.databaseManager.startObservingRemoteChanges()
                 self.databaseManager.startObservingTermination()
                 self.databaseManager.createDatabaseSubscriptionIfHaveNot()
             case .couldNotDetermine:
-                break
+                // Maybe this should throw an error here, but unclear what useful error there is to return
+                pullComplete(nil)
             @unknown default:
-                break
+                pullComplete(nil)
             }
         }
     }
