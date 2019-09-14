@@ -175,9 +175,7 @@ final class SharedDatabaseManager: DatabaseManager {
             }
 
             for recordId in deletedRecordIds {
-                if let syncObject = self.syncObjects.first(where: { $0.zoneID == recordId.zoneID }) {
-                    syncObject.delete(recordID: recordId)
-                }
+                self.syncObjects.filter { $0.zoneID == recordId.zoneID }.forEach { $0.delete(recordID: recordId) }
             }
 
             callback?(error)
