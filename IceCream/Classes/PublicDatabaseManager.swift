@@ -27,12 +27,18 @@ final class PublicDatabaseManager: DatabaseManager {
     }
     
     func fetchChangesInDatabase(_ callback: ((Error?) -> Void)?) {
-        syncObjects.forEach { [weak self] syncObject in
+        syncObjects.forEach { syncObject in
             let predicate = NSPredicate(value: true)
             syncObject.recordTypes.forEach { recordType in
                 let query = CKQuery(recordType: recordType, predicate: predicate)
                 let queryOperation = CKQueryOperation(query: query)
-                self?.excuteQueryOperation(queryOperation: queryOperation, on: syncObject, callback: callback)
+
+                if callback != nil {
+                    queryOperation.qualityOfService = .userInitiated
+                    queryOperation.timeoutIntervalForRequest = 60
+                }
+
+                self.excuteQueryOperation(queryOperation: queryOperation, on: syncObject, callback: callback)
             }
         }
     }
@@ -83,7 +89,7 @@ final class PublicDatabaseManager: DatabaseManager {
                 DispatchQueue.main.async {
                     callback?(nil)
                 }
-            case .retry(let timeToWait, _):
+            case .retry(let timeToWait, _, _):
                 ErrorHandler.shared.retryOperationIfPossible(retryAfter: timeToWait, block: {
                     self.excuteQueryOperation(queryOperation: queryOperation, on: syncObject, callback: callback)
                 })

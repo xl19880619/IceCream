@@ -81,14 +81,19 @@ extension SyncEngine {
     ///
     /// - Parameter completionHandler: Supported in the `privateCloudDatabase` when the fetch data process completes, completionHandler will be called. The error will be returned when anything wrong happens. Otherwise the error will be `nil`.
     public func pull(completionHandler: ((Error?) -> Void)? = nil) {
-        databaseManager.fetchChangesInDatabase { (error) in
-            // Wait for all the run loop tasks to complete before returning
-            self.runLoopQueue.async {
-                DispatchQueue.main.async {
-                    completionHandler?(error)
+        // If completionHandler is nil, keep it that way because it affects how things are fetched
+        let completion = completionHandler.map { originalCompletion in
+            return { error in
+                // Wait for all the run loop tasks to complete before returning
+                self.runLoopQueue.async {
+                    DispatchQueue.main.async {
+                        originalCompletion(error)
+                    }
                 }
             }
         }
+
+        databaseManager.fetchChangesInDatabase(completion)
     }
     
     /// Push all existing local data to CloudKit
@@ -133,6 +138,7 @@ public enum IceCreamKey: String {
 public enum IceCreamSubscription: String, CaseIterable {
     case cloudKitPrivateDatabaseSubscriptionID = "private_changes"
     case cloudKitPublicDatabaseSubscriptionID = "cloudKitPublicDatabaseSubcriptionID"
+    case cloudKitSharedDatabaseSubscriptionID = "shared_changes"
     
     var id: String {
         return rawValue

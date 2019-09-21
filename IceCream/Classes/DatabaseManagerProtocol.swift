@@ -85,6 +85,7 @@ extension DatabaseManager {
     
     /// Sync local data to CloudKit
     /// For more about the savePolicy: https://developer.apple.com/documentation/cloudkit/ckrecordsavepolicy
+    /// TODO: This function does not set qualityOfService, timeoutIntervalForRequest or stop retries when there's a completion block. This means this task could run for a while.
     public func syncRecordsToCloudKit(recordsToStore: [CKRecord], recordIDsToDelete: [CKRecord.ID], allowsCellularAccess: Bool = true, completion: ((Error?) -> ())? = nil) {
         let modifyOpe = CKModifyRecordsOperation(recordsToSave: recordsToStore, recordIDsToDelete: recordIDsToDelete)
         
@@ -119,7 +120,7 @@ extension DatabaseManager {
                 DispatchQueue.main.async {
                     completion?(nil)
                 }
-            case .retry(let timeToWait, _):
+            case .retry(let timeToWait, _, _):
                 ErrorHandler.shared.retryOperationIfPossible(retryAfter: timeToWait) {
                     self.syncRecordsToCloudKit(recordsToStore: recordsToStore, recordIDsToDelete: recordIDsToDelete, completion: completion)
                 }

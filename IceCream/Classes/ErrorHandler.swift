@@ -18,10 +18,10 @@ struct ErrorHandler {
     /// We could classify all the result that CKOperation returns into the following five CKOperationResultTypes
     enum CKOperationResultType {
         case success
-        case retry(afterSeconds: Double, message: String)
+        case retry(afterSeconds: Double, message: String, error: Error)
         case chunk
-        case recoverableError(reason: CKOperationFailReason, message: String)
-        case fail(reason: CKOperationFailReason, message: String)
+        case recoverableError(reason: CKOperationFailReason, message: String, error: Error)
+        case fail(reason: CKOperationFailReason, message: String, error: Error)
     }
     
     /// The reason of CloudKit failure could be classified into following 8 cases
@@ -37,10 +37,10 @@ struct ErrorHandler {
     }
     
     func resultType(with error: Error?) -> CKOperationResultType {
-        guard error != nil else { return .success }
+        guard let error = error else { return .success }
         
         guard let e = error as? CKError else {
-            return .fail(reason: .unknown, message: "The error returned is not a CKError")
+            return .fail(reason: .unknown, message: "The error returned is not a CKError", error: error)
         }
         
         let message = returnErrorMessage(for: e.code)
@@ -56,22 +56,22 @@ struct ErrorHandler {
             let userInfo = e.userInfo
             if let retry = userInfo[CKErrorRetryAfterKey] as? Double {
                 print("ErrorHandler - \(message). Should retry in \(retry) seconds.")
-                return .retry(afterSeconds: retry, message: message)
+                return .retry(afterSeconds: retry, message: message, error: error)
             } else {
-                return .fail(reason: .unknown, message: message)
+                return .fail(reason: .unknown, message: message, error: error)
             }
             
         // RECOVERABLE ERROR
         case .networkUnavailable,
              .networkFailure:
             print("ErrorHandler.recoverableError: \(message)")
-            return .recoverableError(reason: .network, message: message)
+            return .recoverableError(reason: .network, message: message, error: error)
         case .changeTokenExpired:
             print("ErrorHandler.recoverableError: \(message)")
-            return .recoverableError(reason: .changeTokenExpired, message: message)
+            return .recoverableError(reason: .changeTokenExpired, message: message, error: error)
         case .serverRecordChanged:
             print("ErrorHandler.recoverableError: \(message)")
-            return .recoverableError(reason: .serverRecordChanged, message: message)
+            return .recoverableError(reason: .serverRecordChanged, message: message, error: error)
         case .partialFailure:
             // Normally it shouldn't happen since if CKOperation `isAtomic` set to true
             if let dictionary = e.userInfo[CKPartialErrorsByItemIDKey] as? NSDictionary {
@@ -79,10 +79,10 @@ struct ErrorHandler {
 
                 if partialFailureShouldRetry(withErrors: dictionary) {
                     print("Retrying the operation as it contains reference errors")
-                    return .retry(afterSeconds: 5, message: message)
+                    return .retry(afterSeconds: 5, message: message, error: error)
                 }
             }
-            return .recoverableError(reason: .partialFailure, message: message)
+            return .recoverableError(reason: .partialFailure, message: message, error: error)
             
         // SHOULD CHUNK IT UP
         case .limitExceeded:
@@ -94,26 +94,25 @@ struct ErrorHandler {
              .participantMayNeedVerification,
              .tooManyParticipants:
             print("ErrorHandler.Fail: \(message)")
-            return .fail(reason: .shareRelated, message: message)
+            return .fail(reason: .shareRelated, message: message, error: error)
         
         // quota exceeded is sort of a special case where the user has to take action(like spare more room in iCloud) before retry
         case .quotaExceeded:
             print("ErrorHandler.Fail: \(message)")
-            return .fail(reason: .quotaExceeded, message: message)
+            return .fail(reason: .quotaExceeded, message: message, error: error)
 
         case .referenceViolation:
             print("ErrorHandler.Fail: \(message). Will retry in 5 seconds because likely the parent is currently being uploaded")
-            return .retry(afterSeconds: 5, message: message)
+            return .retry(afterSeconds: 5, message: message, error: error)
             
         // FAIL IS THE FINAL, WE REALLY CAN'T DO MORE
         default:
             print("ErrorHandler.Fail: \(message)")
-            return .fail(reason: .unknown, message: message)
+            return .fail(reason: .unknown, message: message, error: error)
         }
     }
     
     func retryOperationIfPossible(retryAfter: Double, block: @escaping () -> ()) {
-        
         let delayTime = DispatchTime.now() + retryAfter
         DispatchQueue.main.asyncAfter(deadline: delayTime, execute: {
             block()

@@ -28,17 +28,6 @@ extension CKRecordConvertible where Self: Object {
         return className()
     }
     
-//    public static func zoneID(for databaseScope: CKDatabase.Scope, ownerName: String) -> CKRecordZone.ID {
-//        switch databaseScope {
-//        case .private:
-//            return CKRecordZone.ID(zoneName: "\(recordType)sZone", ownerName: CKCurrentUserDefaultName)
-//        case .public:
-//            return CKRecordZone.default().zoneID
-//        case .shared:
-//            return CKRecordZone.ID(zoneName: "\(recordType)sZone", ownerName: ownerName)
-//        }
-//    }
-//
     /// recordName : this is the unique identifier for the record, used to locate records on the database. We can create our own ID or leave it to CloudKit to generate a random UUID.
     /// For more: https://medium.com/@guilhermerambo/synchronizing-data-with-cloudkit-94c6246a3fda
     public func recordID(for zoneID: CKRecordZone.ID) -> CKRecord.ID {

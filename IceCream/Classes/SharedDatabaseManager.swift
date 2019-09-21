@@ -30,35 +30,45 @@ final class SharedDatabaseManager: DatabaseManager {
     func fetchChangesInDatabase(_ callback: ((Error?) -> Void)?) {
         let changesOperation = CKFetchDatabaseChangesOperation(previousServerChangeToken: databaseChangeToken)
 
+        // We assume that the user wants to know about progress here
+        if callback != nil {
+            changesOperation.qualityOfService = .userInitiated
+            changesOperation.timeoutIntervalForRequest = 30
+        }
+
         /// Only update the changeToken when fetch process completes
         changesOperation.changeTokenUpdatedBlock = { [weak self] newToken in
             self?.databaseChangeToken = newToken
         }
 
-        changesOperation.fetchDatabaseChangesCompletionBlock = {
-            [weak self]
-            newToken, _, error in
-            guard let self = self else { return }
+        changesOperation.fetchDatabaseChangesCompletionBlock = { newToken, _, error in
             switch ErrorHandler.shared.resultType(with: error) {
             case .success:
                 self.databaseChangeToken = newToken
                 // Fetch the changes in zone level
                 self.fetchChangesInZones(callback)
-            case .retry(let timeToWait, _):
-                ErrorHandler.shared.retryOperationIfPossible(retryAfter: timeToWait, block: {
-                    self.fetchChangesInDatabase(callback)
-                })
-            case .recoverableError(let reason, _):
+            case .retry(let timeToWait, _, let error):
+                if let callback = callback {
+                    // If the user is waiting for this error, then let's not retry and let's return the error
+                    callback(error)
+                } else {
+                    ErrorHandler.shared.retryOperationIfPossible(retryAfter: timeToWait, block: {
+                        self.fetchChangesInDatabase(callback)
+                    })
+                }
+            case .recoverableError(let reason, _, let error):
                 switch reason {
                 case .changeTokenExpired:
                     /// The previousServerChangeToken value is too old and the client must re-sync from scratch
                     self.databaseChangeToken = nil
                     self.fetchChangesInDatabase(callback)
                 default:
-                    return
+                    callback?(error)
                 }
-            default:
-                return
+            case .fail(_, _, let error):
+                callback?(error)
+            case .chunk:
+                callback?(IceCreamError(message: "Unexpected error type: failed to get changes token."))
             }
         }
 
@@ -72,7 +82,7 @@ final class SharedDatabaseManager: DatabaseManager {
     func createDatabaseSubscriptionIfHaveNot() {
         #if os(iOS) || os(tvOS) || os(macOS)
         guard !subscriptionIsLocallyCached else { return }
-        let subscription = CKDatabaseSubscription(subscriptionID: IceCreamSubscription.cloudKitPrivateDatabaseSubscriptionID.id)
+        let subscription = CKDatabaseSubscription(subscriptionID: IceCreamSubscription.cloudKitSharedDatabaseSubscriptionID.id)
 
         let notificationInfo = CKSubscription.NotificationInfo()
         notificationInfo.shouldSendContentAvailable = true // Silent Push
@@ -113,6 +123,12 @@ final class SharedDatabaseManager: DatabaseManager {
         let changesOp = CKFetchRecordZoneChangesOperation(recordZoneIDs: zoneIds, optionsByRecordZoneID: zoneIdOptions)
         changesOp.fetchAllChanges = true
 
+        // We assume that the user wants to know about progress here
+        if callback != nil {
+            changesOp.qualityOfService = .userInitiated
+            changesOp.timeoutIntervalForRequest = 60
+        }
+
         var changedRecords = [String: [CKRecord]]()
         var deletedRecordIds = [CKRecord.ID]()
 
@@ -132,26 +148,32 @@ final class SharedDatabaseManager: DatabaseManager {
             deletedRecordIds.append(recordId)
         }
 
-        changesOp.recordZoneFetchCompletionBlock = { [weak self](zoneId ,token, _, _, error) in
-            guard let self = self else { return }
+        changesOp.recordZoneFetchCompletionBlock = { (zoneId ,token, _, _, error) in
             switch ErrorHandler.shared.resultType(with: error) {
             case .success:
                 self.syncObjects.filter { $0.zoneID == zoneId }.forEach { $0.zoneChangesToken = token }
-            case .retry(let timeToWait, _):
-                ErrorHandler.shared.retryOperationIfPossible(retryAfter: timeToWait, block: {
-                    self.fetchChangesInZones(callback)
-                })
-            case .recoverableError(let reason, _):
+            case .retry(let timeToWait, _, let error):
+                if let callback = callback {
+                    // If the user is waiting for this error, then let's not retry and let's return the error
+                    callback(error)
+                } else {
+                    ErrorHandler.shared.retryOperationIfPossible(retryAfter: timeToWait, block: {
+                        self.fetchChangesInZones(callback)
+                    })
+                }
+            case .recoverableError(let reason, _, let error):
                 switch reason {
                 case .changeTokenExpired:
                     /// The previousServerChangeToken value is too old and the client must re-sync from scratch
                     self.syncObjects.filter { $0.zoneID == zoneId }.forEach { $0.zoneChangesToken = nil }
                     self.fetchChangesInZones(callback)
                 default:
-                    return
+                    callback?(error)
                 }
-            default:
-                return
+            case .fail(_, _, let error):
+                callback?(error)
+            case .chunk:
+                callback?(IceCreamError(message: "Unexpected error type: failed to get database changes."))
             }
         }
 
