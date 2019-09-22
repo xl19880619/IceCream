@@ -22,16 +22,7 @@ public protocol DatabaseManager: class {
     func prepare()
     
     func fetchChangesInDatabase(_ callback: ((Error?) -> Void)?)
-    
-    /// The CloudKit Best Practice is out of date, now use this:
-    /// https://developer.apple.com/documentation/cloudkit/ckoperation
-    /// Which problem does this func solve? E.g.:
-    /// 1.(Offline) You make a local change, involve a operation
-    /// 2. App exits or ejected by user
-    /// 3. Back to app again
-    /// The operation resumes! All works like a magic!
-    func resumeLongLivedOperationIfPossible()
-    
+        
     func createCustomZonesIfAllowed()
     func startObservingRemoteChanges()
     func startObservingTermination()
@@ -53,23 +44,6 @@ extension DatabaseManager {
             $0.pipeToEngine = { [weak self] recordsToStore, recordIDsToDelete in
                 guard let self = self else { return }
                 self.syncRecordsToCloudKit(recordsToStore: recordsToStore, recordIDsToDelete: recordIDsToDelete, allowsCellularAccess: false)
-            }
-        }
-    }
-    
-    func resumeLongLivedOperationIfPossible() {
-        container.fetchAllLongLivedOperationIDs { [weak self]( opeIDs, error) in
-            guard let self = self, error == nil, let ids = opeIDs else { return }
-            for id in ids {
-                self.container.fetchLongLivedOperation(withID: id, completionHandler: { [weak self](ope, error) in
-                    guard let self = self, error == nil else { return }
-                    if let modifyOp = ope as? CKModifyRecordsOperation {
-                        modifyOp.modifyRecordsCompletionBlock = { (_,_,_) in
-                            print("Resume modify records success!")
-                        }
-                        self.database.add(modifyOp)
-                    }
-                })
             }
         }
     }
