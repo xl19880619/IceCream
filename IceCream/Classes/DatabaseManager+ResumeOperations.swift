@@ -1,5 +1,5 @@
 //
-//  CKContainer+ResumeOperations.swift
+//  DatabaseManager+ResumeOperations.swift
 //  IceCream
 //
 //  Created by Peter Livesey on 9/23/19.
@@ -9,10 +9,10 @@
 import Foundation
 import CloudKit
 
-extension CKContainer {
-    private static var resumedOperationIds = Set<CKOperation.ID>()
-    private static let queue = DispatchQueue(label: "com.icecream.ckcontainer.resumeoperations", qos: .utility)
+private var resumedOperationIds = Set<CKOperation.ID>()
+private let queue = DispatchQueue(label: "com.icecream.ckcontainer.resumeoperations", qos: .utility)
 
+extension DatabaseManager {
     /// The CloudKit Best Practice is out of date, now use this:
     /// https://developer.apple.com/documentation/cloudkit/ckoperation
     /// Which problem does this func solve? E.g.:
@@ -21,22 +21,22 @@ extension CKContainer {
     /// 3. Back to app again
     /// The operation resumes! All works like a magic!
     func resumeLongLivedOperationIfPossible() {
-        fetchAllLongLivedOperationIDs { [weak self] (opeIDs, error) in
+        container.fetchAllLongLivedOperationIDs { [weak self] (opeIDs, error) in
             guard let self = self, error == nil, let ids = opeIDs else { return }
             for id in ids {
                 // If you add the same operation to a container, it will crash
                 // So, we need to keep track of all the operation ids and make sure we don't repeat them
-                CKContainer.queue.async {
-                    if CKContainer.resumedOperationIds.contains(id) {
+                queue.async {
+                    if resumedOperationIds.contains(id) {
                         return
                     }
 
-                    CKContainer.resumedOperationIds.insert(id)
+                    resumedOperationIds.insert(id)
 
-                    self.fetchLongLivedOperation(withID: id) { (ope, error) in
+                    self.container.fetchLongLivedOperation(withID: id) { (ope, error) in
                         guard error == nil else {
-                            CKContainer.queue.async {
-                                CKContainer.resumedOperationIds.remove(id)
+                            queue.async {
+                                resumedOperationIds.remove(id)
                             }
 
                             return
@@ -47,7 +47,7 @@ extension CKContainer {
                                 print("Resume modify records success!")
                             }
 
-                            self.add(modifyOp)
+                            self.database.add(modifyOp)
                         }
                     }
                 }

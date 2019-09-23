@@ -16,10 +16,10 @@
 		0DF861D822D0563700B20AEA /* PublicDatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 673B1E6D2273EECF00EB4FEE /* PublicDatabaseManager.swift */; };
 		0DF861D922D0563800B20AEA /* PublicDatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 673B1E6D2273EECF00EB4FEE /* PublicDatabaseManager.swift */; };
 		0DF861DA22D0563800B20AEA /* PublicDatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 673B1E6D2273EECF00EB4FEE /* PublicDatabaseManager.swift */; };
-		364C4A0623382A7C006D04F7 /* CKContainer+ResumeOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 364C4A0523382A7C006D04F7 /* CKContainer+ResumeOperations.swift */; };
-		364C4A0723382A7F006D04F7 /* CKContainer+ResumeOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 364C4A0523382A7C006D04F7 /* CKContainer+ResumeOperations.swift */; };
-		364C4A0823382A7F006D04F7 /* CKContainer+ResumeOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 364C4A0523382A7C006D04F7 /* CKContainer+ResumeOperations.swift */; };
-		364C4A0923382A7F006D04F7 /* CKContainer+ResumeOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 364C4A0523382A7C006D04F7 /* CKContainer+ResumeOperations.swift */; };
+		364C4A0623382A7C006D04F7 /* DatabaseManager+ResumeOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 364C4A0523382A7C006D04F7 /* DatabaseManager+ResumeOperations.swift */; };
+		364C4A0723382A7F006D04F7 /* DatabaseManager+ResumeOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 364C4A0523382A7C006D04F7 /* DatabaseManager+ResumeOperations.swift */; };
+		364C4A0823382A7F006D04F7 /* DatabaseManager+ResumeOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 364C4A0523382A7C006D04F7 /* DatabaseManager+ResumeOperations.swift */; };
+		364C4A0923382A7F006D04F7 /* DatabaseManager+ResumeOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 364C4A0523382A7C006D04F7 /* DatabaseManager+ResumeOperations.swift */; };
 		365FB6DD2334D56300F9CED7 /* IceCreamError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 365FB6DC2334D56300F9CED7 /* IceCreamError.swift */; };
 		36A841CE23214C5900216681 /* RunLoopQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36A841CD23214C5900216681 /* RunLoopQueue.swift */; };
 		36A841CF23214C5900216681 /* RunLoopQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36A841CD23214C5900216681 /* RunLoopQueue.swift */; };
@@ -81,7 +81,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		364C4A0523382A7C006D04F7 /* CKContainer+ResumeOperations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CKContainer+ResumeOperations.swift"; sourceTree = "<group>"; };
+		364C4A0523382A7C006D04F7 /* DatabaseManager+ResumeOperations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DatabaseManager+ResumeOperations.swift"; sourceTree = "<group>"; };
 		365FB6DC2334D56300F9CED7 /* IceCreamError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IceCreamError.swift; sourceTree = "<group>"; };
 		36A841CD23214C5900216681 /* RunLoopQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunLoopQueue.swift; sourceTree = "<group>"; };
 		36D05D722305A968002A6AFC /* SharedDatabaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDatabaseManager.swift; sourceTree = "<group>"; };
@@ -190,7 +190,7 @@
 				6743F71E202B0F9400912163 /* .gitkeep */,
 				6773DF0220BD2CE10019FF3A /* Syncable.swift */,
 				673B1E6B2273EECE00EB4FEE /* DatabaseManagerProtocol.swift */,
-				364C4A0523382A7C006D04F7 /* CKContainer+ResumeOperations.swift */,
+				364C4A0523382A7C006D04F7 /* DatabaseManager+ResumeOperations.swift */,
 				673B1E6C2273EECF00EB4FEE /* PrivateDatabaseManager.swift */,
 				673B1E6D2273EECF00EB4FEE /* PublicDatabaseManager.swift */,
 				36D05D722305A968002A6AFC /* SharedDatabaseManager.swift */,
@@ -426,7 +426,7 @@
 				6743F72B202B0F9400912163 /* CreamAsset.swift in Sources */,
 				6773DF0120BD2CBD0019FF3A /* CKRecordConvertible.swift in Sources */,
 				673B1E702273EECF00EB4FEE /* PublicDatabaseManager.swift in Sources */,
-				364C4A0623382A7C006D04F7 /* CKContainer+ResumeOperations.swift in Sources */,
+				364C4A0623382A7C006D04F7 /* DatabaseManager+ResumeOperations.swift in Sources */,
 				6773DF0320BD2CE20019FF3A /* Syncable.swift in Sources */,
 				6773DF0020BD2CBD0019FF3A /* CKRecordRecoverable.swift in Sources */,
 				6743F72D202B0F9400912163 /* Notification+Name.swift in Sources */,
@@ -455,7 +455,7 @@
 				6747815E213BEDD6005C132B /* Notification+Name.swift in Sources */,
 				6747815F213BEDD6005C132B /* SyncEngine.swift in Sources */,
 				0DF861D622D0563400B20AEA /* PrivateDatabaseManager.swift in Sources */,
-				364C4A0823382A7F006D04F7 /* CKContainer+ResumeOperations.swift in Sources */,
+				364C4A0823382A7F006D04F7 /* DatabaseManager+ResumeOperations.swift in Sources */,
 				67478160213BEDD6005C132B /* SyncObject.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -476,7 +476,7 @@
 				6747816D213BEF0E005C132B /* Notification+Name.swift in Sources */,
 				6747816E213BEF0E005C132B /* SyncEngine.swift in Sources */,
 				0DF861D722D0563500B20AEA /* PrivateDatabaseManager.swift in Sources */,
-				364C4A0923382A7F006D04F7 /* CKContainer+ResumeOperations.swift in Sources */,
+				364C4A0923382A7F006D04F7 /* DatabaseManager+ResumeOperations.swift in Sources */,
 				6747816F213BEF0E005C132B /* SyncObject.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -497,7 +497,7 @@
 				D826ADCE212189F2002B5C0F /* CreamAsset.swift in Sources */,
 				D826ADC8212189F2002B5C0F /* Syncable.swift in Sources */,
 				0DF861D522D0563300B20AEA /* PrivateDatabaseManager.swift in Sources */,
-				364C4A0723382A7F006D04F7 /* CKContainer+ResumeOperations.swift in Sources */,
+				364C4A0723382A7F006D04F7 /* DatabaseManager+ResumeOperations.swift in Sources */,
 				D826ADD0212189F2002B5C0F /* SyncEngine.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
