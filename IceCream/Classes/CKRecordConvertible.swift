@@ -134,7 +134,7 @@ extension CKRecordConvertible where Self: Object {
         }
 
         if let parent = parent, !isDeleted {
-            r.parent = CKRecord.Reference(recordID: parent.recordID(for: zoneID), action: .deleteSelf)
+            r.parent = CKRecord.Reference(recordID: parent.recordID(for: zoneID), action: .none)
         }
 
         return r
