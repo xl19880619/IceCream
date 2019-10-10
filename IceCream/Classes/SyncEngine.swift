@@ -52,14 +52,16 @@ public final class SyncEngine {
             case .available:
                 self.databaseManager.createCustomZonesIfAllowed()
                 self.databaseManager.fetchChangesInDatabase(pullComplete)
-                self.databaseManager.resumeLongLivedOperationIfPossible()
+                // This seems to crash and I don't think it's necessary
+//                self.databaseManager.resumeLongLivedOperationIfPossible()
                 self.databaseManager.startObservingRemoteChanges()
                 self.databaseManager.startObservingTermination()
                 self.databaseManager.createDatabaseSubscriptionIfHaveNot()
             case .noAccount, .restricted:
                 guard self.databaseManager is PublicDatabaseManager else { break }
                 self.databaseManager.fetchChangesInDatabase(pullComplete)
-                self.databaseManager.resumeLongLivedOperationIfPossible()
+                // This seems to crash and I don't think it's necessary
+//                self.databaseManager.resumeLongLivedOperationIfPossible()
                 self.databaseManager.startObservingRemoteChanges()
                 self.databaseManager.startObservingTermination()
                 self.databaseManager.createDatabaseSubscriptionIfHaveNot()
