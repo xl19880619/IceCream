@@ -73,7 +73,7 @@ extension SyncObject: Syncable {
     }
 
     public func add(record: CKRecord) {
-        async {
+        DispatchQueue.main.async {
             let realm = self.realm()
 
             realm.beginWrite()
@@ -101,7 +101,7 @@ extension SyncObject: Syncable {
     }
 
     public func delete(recordID: CKRecord.ID) {
-        async {
+        DispatchQueue.main.async {
             let realm = self.realm()
 
             realm.beginWrite()
@@ -130,7 +130,7 @@ extension SyncObject: Syncable {
     /// When you commit a write transaction to a Realm, all other instances of that Realm will be notified, and be updated automatically.
     /// For more: https://realm.io/docs/swift/latest/#writes
     public func registerLocalDatabase() {
-        async {
+        DispatchQueue.main.async {
             let realm = self.realm()
 
             self.notificationToken = realm.objects(T.self).observe({ [weak self](changes) in
@@ -153,7 +153,7 @@ extension SyncObject: Syncable {
     }
 
     public func cleanUp() {
-        async {
+        DispatchQueue.main.async {
             let realm = self.realm()
 
             let objects = realm.objects(T.self).filter { $0.isDeleted }
