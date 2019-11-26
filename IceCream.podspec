@@ -27,6 +27,7 @@ Pod::Spec.new do |s|
   s.source_files = ["IceCream/Classes/**/*","IceCream/IceCream.h"]
   s.public_header_files = ["IceCream/IceCream.h"]
   s.swift_version = '5.0'
+  s.static_framework = true
 
   s.dependency 'RealmSwift'
 end
